@@ -126,12 +126,17 @@ impl Attribute {
 
 pub struct Document {
     title: String,
+    declaration: Option<String>,
     sections: Vec<Section>,
 }
 
 impl Document {
     pub fn title(&self) -> &str {
         &self.title
+    }
+
+    pub fn declaration(&self) -> Option<&str> {
+        self.declaration.as_deref()
     }
 
     pub fn sections(&self) -> &[Section] {
