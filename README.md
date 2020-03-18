@@ -1,2 +1,3 @@
-# rdocs
+# paradocs
+
 Rust docs parser (WIP)
