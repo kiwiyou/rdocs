@@ -268,6 +268,22 @@ fn parse_rust_document(input: &str) -> Option<Document> {
         .map(|n| n.as_node())
         .unwrap_or(fqn.as_node());
 
+    let simple_decl = fqn
+        .as_node()
+        .following_siblings()
+        .select("pre.rust")
+        .unwrap()
+        .next();
+    foremost = simple_decl
+        .as_ref()
+        .map(|n| n.as_node())
+        .unwrap_or(foremost);
+
+    let declaration = type_decl
+        .as_ref()
+        .map(|n| n.text_contents())
+        .or(simple_decl.as_ref().map(|n| parse_generic_code(n.as_node())));
+
     let docblock = foremost
         .following_siblings()
         .select(".docblock")
@@ -310,7 +326,7 @@ fn parse_rust_document(input: &str) -> Option<Document> {
 
     Some(Document {
         title,
-        declaration: None,
+        declaration,
         description,
         exports: re_exports,
         sub_items: sub_item_sections,
@@ -399,6 +415,34 @@ macro_rules! handle_heading_depth {
         $title = Some(parse_text(&$doc_node));
         $content = Vec::new();
     }};
+}
+
+fn parse_generic_code(pre: &NodeRef) -> String {
+    let mut output = String::new();
+    for edge in pre.traverse() {
+        if let NodeEdge::Start(node_start) = edge {
+            match node_start.data() {
+                NodeData::Text(text) => output.push_str(&text.borrow()),
+                NodeData::Element(element) => {
+                    match element.name.local {
+                        local_name!("br") => output.push('\n'),
+                        local_name!("span") => {
+                            let attributes = element.attributes.borrow();
+                            let has_newline_option = attributes.get("class")
+                            .map(|class| class.contains("fmt-newline"))
+                            .unwrap_or(false);
+                            if has_newline_option {
+                                output.push('\n');
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+    output
 }
 
 fn parse_docblock(docblock: &NodeRef) -> Option<Vec<Section>> {
