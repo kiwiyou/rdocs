@@ -11,3 +11,7 @@ reqwest = "0.10.4"
 
 [dev-dependencies]
 tokio = { version = "0.2.13", features = ["macros"] }
+
+[[test]]
+name = "tokio"
+path = "test/tokio.rs"
