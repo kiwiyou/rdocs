@@ -113,11 +113,11 @@ pub(crate) fn parse_generic_code(pre: &NodeRef) -> Code {
     output
 }
 
-pub(crate) fn skip_toggle_wrapper(head: NodeRef) -> Option<NodeRef> {
+pub(crate) fn skip_uninformative(head: NodeRef) -> Option<NodeRef> {
     head.inclusive_following_siblings().find(|n| {
         if let Some(element) = n.as_element() {
             if let Some(class) = element.attributes.borrow().get("class") {
-                class.contains("toggle-wrapper")
+                class.contains("toggle")
             } else {
                 false
             }
