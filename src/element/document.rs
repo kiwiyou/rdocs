@@ -200,7 +200,7 @@ pub(crate) fn parse_document(input: &NodeRef) -> Option<Document> {
     let fqn = main.as_node().select_first(".fqn").ok()?;
     let title = fqn.as_node().last_child()?.text_contents();
 
-    let after_title = fqn.as_node().next_sibling().and_then(skip_toggle_wrapper);
+    let after_title = fqn.as_node().next_sibling().and_then(skip_uninformative);
     match title.split_ascii_whitespace().next()? {
         "Crate" => {
             let (mark, description, module) = after_title.and_then(parse_module).unwrap_or_default();
@@ -279,20 +279,20 @@ pub(crate) fn parse_document(input: &NodeRef) -> Option<Document> {
 }
 
 fn parse_module(after_title: NodeRef) -> Option<(Mark, Vec<Section>, Module)> {
-    let (head, mark) = if let Some(head) = skip_toggle_wrapper(after_title) {
+    let (head, mark) = if let Some(head) = skip_uninformative(after_title) {
         parse_marks_forward(head)
     } else {
         (None, Mark::default())
     };
 
-    let head = head.and_then(skip_toggle_wrapper);
+    let head = head.and_then(skip_uninformative);
     let description = if let Some(head) = &head {
         parse_docblock(head)?
     } else {
         Vec::new()
     };
 
-    let head = head.and_then(|head| head.next_sibling()).and_then(skip_toggle_wrapper);
+    let head = head.and_then(|head| head.next_sibling()).and_then(skip_uninformative);
 
     let (mut head, re_exports) = if let Some(head) = head {
         parse_exports_forward(head)?
@@ -304,7 +304,7 @@ fn parse_module(after_title: NodeRef) -> Option<(Mark, Vec<Section>, Module)> {
     while let Some(summary_head) = head {
         let (new_head, summary) = parse_summary_forward(summary_head)?;
         sub_item.push(summary);
-        head = new_head.and_then(skip_toggle_wrapper);
+        head = new_head.and_then(skip_uninformative);
     }
 
     Some((
@@ -320,7 +320,7 @@ fn parse_module(after_title: NodeRef) -> Option<(Mark, Vec<Section>, Module)> {
 fn parse_declared(after_title: NodeRef) -> Option<(Mark, Vec<Section>, Code)> {
     let code = parse_generic_code(&after_title);
     
-    let head = after_title.next_sibling().and_then(skip_toggle_wrapper);
+    let head = after_title.next_sibling().and_then(skip_uninformative);
 
     let (head, mark) = if let Some(head) = head {
         parse_marks_forward(head)

@@ -63,7 +63,7 @@ use kuchiki::{NodeRef, NodeData, iter::NodeEdge};
 use html5ever::local_name;
 pub(crate) fn parse_simple_item_forward(head: NodeRef) -> Option<(Option<NodeRef>, SimpleItem)> {
     let declaration = parse_generic_code(&head);
-    let head = head.next_sibling().and_then(skip_toggle_wrapper);
+    let head = head.next_sibling().and_then(skip_uninformative);
 
     let (head, mark) = if let Some(head) = head {
         parse_marks_forward(head)
@@ -71,7 +71,7 @@ pub(crate) fn parse_simple_item_forward(head: NodeRef) -> Option<(Option<NodeRef
         (None, Mark::default())
     };
 
-    let head = head.and_then(skip_toggle_wrapper);
+    let head = head.and_then(skip_uninformative);
     let (head, description) = if let Some(head) = head {
         (head.next_sibling(), parse_docblock(&head)?)
     } else {
